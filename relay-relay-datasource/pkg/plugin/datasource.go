@@ -11,7 +11,7 @@ import (
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/instancemgmt"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
-	// "github.com/grafana/grafana-plugin-sdk-go/data"
+	"github.com/grafana/grafana-plugin-sdk-go/data"
 	"github.com/nats-io/nats.go/jetstream"
 )
 
@@ -122,6 +122,10 @@ func (d *Datasource) PublishStream(context.Context, *backend.PublishStreamReques
 	}, nil
 }
 
+type ReqData struct {
+	Topic string `json:"topic"`
+}
+
 func (d *Datasource) RunStream(ctx context.Context, req *backend.RunStreamRequest, sender *backend.StreamSender) error {
 	// for simplicity on any error the function returns and ends the streaming
 	natsClient, err := InitNewClient(d)
@@ -135,46 +139,68 @@ func (d *Datasource) RunStream(ctx context.Context, req *backend.RunStreamReques
 	logObject("RELAY_DEBUG_NC", natsClient)
 
 	log.DefaultLogger.Info("Connected to Relay!")
+	logObject("RELAY_DEBUG_REQ", req.Data)
+
+	reqData := ReqData{}
+
+	if err := json.Unmarshal([]byte(req.Data), &reqData); err != nil {
+		logObject("RELAY_DEBUG_JSON_ERR", err)
+		return err
+	}
+
+	var topic = reqData.Topic
 
 	newStream, sErr := js.CreateStream(ctx, jetstream.StreamConfig{
 		Name:     "test-namespace-stream",
-		Subjects: []string{"test-topic"},
+		Subjects: []string{topic},
 	})
 
 	logObject("RELAY_DEBUG_JS", newStream)
 	logObject("RELAY_DEBUG_JS_ERR", sErr)
 
-	// for {
-	// 	select {
-	// 	case <-ctx.Done():
-	// 		return ctx.Err()
-	// 	default:
+	ephemeral, _ := js.CreateOrUpdateConsumer(ctx, "test-namespace-stream", jetstream.ConsumerConfig{
+		Name: topic,
+		FilterSubject: topic,
+		DeliverPolicy: jetstream.DeliverNewPolicy,
+		AckPolicy: jetstream.AckExplicitPolicy,
+		ReplayPolicy: jetstream.ReplayInstantPolicy,
+	})
+
+	for {
+		select {
+			case <-ctx.Done():
+				return ctx.Err()
+			default:
+				ephemeral.Consume(func(msg jetstream.Msg) {
+					msg.Ack()
+					log.DefaultLogger.Info(string(msg.Data()))
 			
-
-	// 		msg := Message{}
-	// 		rawMsg, err := ws.ReadMessage()
-
-	// 		if err != nil {
-	// 			return err
-	// 		}
-
-	// 		if err := json.Unmarshal(rawMsg, &msg); err != nil {
-	// 			return err
-	// 		}
-
-	// 		err = sender.SendFrame(
-	// 			data.NewFrame(
-	// 				"response",
-	// 				data.NewField("time", nil, []time.Time{time.UnixMilli(msg.Time)}),
-	// 				data.NewField("value", nil, []float64{msg.Value})),
-	// 			data.IncludeAll,
-	// 		)
-
-	// 		if err != nil {
-	// 			return err
-	// 		}
-	// 	}
-	// }
+					var jsonMap map[string]interface{}
+					json.Unmarshal(msg.Data(), &jsonMap)
+			
+					messageMap := jsonMap["message"].(map[string]interface{})
+					rawMsg, _ := json.Marshal(messageMap)
+			
+					var message json.RawMessage = rawMsg
+					start := jsonMap["start"].(float64)
+			
+					logObject("RELAY_MESSAGE", message)
+			
+					err := sender.SendFrame(
+						data.NewFrame(
+							"response",
+							data.NewField("time", nil, []float64{start}),
+							data.NewField("value", nil, []json.RawMessage{message}),
+						),
+						data.IncludeAll,
+					)
+			
+					if err != nil {
+						Logger.Error("Failed send frame", "error", err)
+					}
+				})
+		}
+	}
 
 	return nil
 }
