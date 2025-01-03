@@ -14,6 +14,8 @@ export class DataSource extends DataSourceWithBackend<QueryInput, MyDataSourceOp
   }
 
   applyTemplateVariables(query: QueryInput, scopedVars: ScopedVars) {
+    console.log("APPLY", query)
+    console.log("APPLY", scopedVars)
     return {
       ...query,
       queryText: getTemplateSrv().replace(query.topic, scopedVars),

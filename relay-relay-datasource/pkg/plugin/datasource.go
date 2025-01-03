@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	// "path"
-	// "time"
-	// "fmt"
+	"time"
+	"fmt"
 	// "reflect"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
@@ -30,45 +30,63 @@ var (
 
 // NewDatasource creates a new datasource instance.
 func NewDatasource(s backend.DataSourceInstanceSettings) (instancemgmt.Instance, error) {
-	settings, err := getDatasourceSettings(s)
+	settings, secureSettings, err := getDatasourceSettings(s)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Datasource{
 		Path: settings.Path,
-		Username: settings.Username,
-		Password: settings.Password,
+		ApiKey: secureSettings.ApiKey,
+		SecretKey: secureSettings.SecretKey,
 	}, nil
 }
 
 type Options struct {
-	Path     string `json:"path"`
-	Username string `json:"username"`
-	Password string `json:"password"`
+	Path string `json:"path"`
 }
 
-func getDatasourceSettings(s backend.DataSourceInstanceSettings) (*Options, error) {
+type DecryptedSecureJSONData struct {
+	SecretKey string `json:"secretKey"`
+	ApiKey string `json:"apiKey"`
+}
+
+func getDatasourceSettings(s backend.DataSourceInstanceSettings) (*Options, *DecryptedSecureJSONData, error) {
 	settings := &Options{}
+	secureSettings := &DecryptedSecureJSONData{}
 
 	logObject("CUSTOM_DEBUG", s)
 
 	if err := json.Unmarshal(s.JSONData, settings); err != nil {
 		logObject("CUSTOM_DEBUG", err)
-		return nil, err
+		return nil, nil, err
+	}
+
+	// Convert DecryptedSecureJSONData map to JSON string
+	secureJSONBytes, err := json.Marshal(s.DecryptedSecureJSONData)
+	if err != nil {
+		logObject("CUSTOM_DEBUG", err)
+		return nil, nil, err
+	}
+
+	// Unmarshal the JSON string into secureSettings struct
+	if err := json.Unmarshal(secureJSONBytes, secureSettings); err != nil {
+		logObject("CUSTOM_DEBUG", err)
+		return nil, nil, err
 	}
 
 	logObject("CUSTOM_DEBUG", settings)
+	logObject("CUSTOM_DEBUG", secureSettings)
 
-	return settings, nil
+	return settings, secureSettings, nil
 }
 
 // Datasource is an example datasource which can respond to data queries, reports
 // its health and has streaming skills.
 type Datasource struct {
 	Path string
-	Username string
-	Password string
+	ApiKey string
+	SecretKey string
 }
 
 // Dispose here tells plugin SDK that plugin wants to clean up resources when a new instance
@@ -98,7 +116,7 @@ func (d *Datasource) CheckHealth(_ context.Context, req *backend.CheckHealthRequ
 }
 
 func (d *Datasource) canConnect() bool {
-	_, err := InitNewClient(d)
+	_, _, err := InitNewClient(d)
 	if err != nil {
 		return false
 	}
@@ -109,6 +127,8 @@ func (d *Datasource) canConnect() bool {
 // SubscribeStream just returns an ok in this case, since we will always allow the user to successfully connect.
 // Permissions verifications could be done here. Check backend.StreamHandler docs for more details.
 func (d *Datasource) SubscribeStream(_ context.Context, req *backend.SubscribeStreamRequest) (*backend.SubscribeStreamResponse, error) {
+	logObject("RELAY_STREAM_SUB", req)
+
 	return &backend.SubscribeStreamResponse{
 		Status: backend.SubscribeStreamStatusOK,
 	}, nil
@@ -128,13 +148,14 @@ type ReqData struct {
 
 func (d *Datasource) RunStream(ctx context.Context, req *backend.RunStreamRequest, sender *backend.StreamSender) error {
 	// for simplicity on any error the function returns and ends the streaming
-	natsClient, err := InitNewClient(d)
-	js, _ := jetstream.New(natsClient)
+	natsClient, namespace, err := InitNewClient(d)
 
 	if err != nil {
 		logObject("RELAY_DEBUG", err)
 		return err
 	}
+	
+	js, _ := jetstream.New(natsClient)
 
 	logObject("RELAY_DEBUG_NC", natsClient)
 
@@ -148,17 +169,18 @@ func (d *Datasource) RunStream(ctx context.Context, req *backend.RunStreamReques
 		return err
 	}
 
-	var topic = reqData.Topic
+	var streamName = fmt.Sprintf("%s_stream", namespace)
+	var topic = fmt.Sprintf("%s_%s", streamName, reqData.Topic)
 
 	newStream, sErr := js.CreateStream(ctx, jetstream.StreamConfig{
-		Name:     "test-namespace-stream",
+		Name: streamName,
 		Subjects: []string{topic},
 	})
 
 	logObject("RELAY_DEBUG_JS", newStream)
 	logObject("RELAY_DEBUG_JS_ERR", sErr)
 
-	ephemeral, _ := js.CreateOrUpdateConsumer(ctx, "test-namespace-stream", jetstream.ConsumerConfig{
+	consumer, _ := js.CreateOrUpdateConsumer(ctx, streamName, jetstream.ConsumerConfig{
 		Name: topic,
 		FilterSubject: topic,
 		DeliverPolicy: jetstream.DeliverNewPolicy,
@@ -166,13 +188,27 @@ func (d *Datasource) RunStream(ctx context.Context, req *backend.RunStreamReques
 		ReplayPolicy: jetstream.ReplayInstantPolicy,
 	})
 
+	var ticker = time.NewTicker(100)
+
 	for {
 		select {
 			case <-ctx.Done():
 				return ctx.Err()
-			default:
-				ephemeral.Consume(func(msg jetstream.Msg) {
+			case <-ticker.C:
+				iter, err := consumer.Messages(jetstream.PullMaxMessages(1))
+
+				if err != nil {
+					Logger.Error("Error retrieving message pull")
+					continue
+				}
+
+				msg, err := iter.Next()
+				if err != nil {
+					Logger.Error("Error retrieving message")
+					continue
+				}else{
 					msg.Ack()
+
 					log.DefaultLogger.Info(string(msg.Data()))
 			
 					var jsonMap map[string]interface{}
@@ -183,8 +219,6 @@ func (d *Datasource) RunStream(ctx context.Context, req *backend.RunStreamReques
 			
 					var message json.RawMessage = rawMsg
 					start := jsonMap["start"].(float64)
-			
-					logObject("RELAY_MESSAGE", message)
 			
 					err := sender.SendFrame(
 						data.NewFrame(
@@ -198,7 +232,7 @@ func (d *Datasource) RunStream(ctx context.Context, req *backend.RunStreamReques
 					if err != nil {
 						Logger.Error("Failed send frame", "error", err)
 					}
-				})
+				}
 		}
 	}
 

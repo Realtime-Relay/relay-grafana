@@ -29,22 +29,12 @@ export function ConfigEditor(props: Props) {
     });
   };
 
-  const onUsernameChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const onSKChange = (event: ChangeEvent<HTMLInputElement>) => {
     onOptionsChange({
       ...options,
-      jsonData: {
+      secureJsonData: {
         ...jsonData,
-        username: event.target.value,
-      },
-    });
-  };
-
-  const onPasswordChange = (event: ChangeEvent<HTMLInputElement>) => {
-    onOptionsChange({
-      ...options,
-      jsonData: {
-        ...jsonData,
-        password: event.target.value,
+        secretKey: event.target.value,
       },
     });
   };
@@ -63,9 +53,23 @@ export function ConfigEditor(props: Props) {
     });
   };
 
+  const onResetSecretKey = () => {
+    onOptionsChange({
+      ...options,
+      secureJsonFields: {
+        ...options.secureJsonFields,
+        secretKey: false,
+      },
+      secureJsonData: {
+        ...options.secureJsonData,
+        secretKey: '',
+      },
+    });
+  };
+
   return (
     <>
-      <InlineField label="Path" labelWidth={14} interactive tooltip={'Json field returned to frontend'}>
+      <InlineField label="Path" labelWidth={14} interactive tooltip={'Relay Service URL'}>
         <Input
           id="config-editor-path"
           onChange={onPathChange}
@@ -74,7 +78,7 @@ export function ConfigEditor(props: Props) {
           width={40}
         />
       </InlineField>
-      <InlineField label="API Key" labelWidth={14} interactive tooltip={'Secure json field (backend only)'}>
+      <InlineField label="API Key" labelWidth={14} interactive tooltip={'Project API Key'}>
         <SecretInput
           required
           id="config-editor-api-key"
@@ -86,21 +90,14 @@ export function ConfigEditor(props: Props) {
           onChange={onAPIKeyChange}
         />
       </InlineField>
-      <InlineField label="Username" labelWidth={14} interactive tooltip={'Relay Username'}>
-        <Input
-          id="config-editor-username"
-          onChange={onUsernameChange}
-          value={jsonData.username}
-          placeholder="Enter Username"
-          width={40}
-        />
-      </InlineField>
-      <InlineField label="Password" labelWidth={14} interactive tooltip={'Relay Password'}>
-        <Input
-          id="config-editor-password"
-          onChange={onPasswordChange}
-          value={jsonData.password}
-          placeholder="Enter Username"
+      <InlineField label="Secret" labelWidth={14} interactive tooltip={'Project Secret'}>
+        <SecretInput
+          id="config-editor-secret-key"
+          onChange={onSKChange}
+          value={secureJsonData?.secretKey}
+          isConfigured={secureJsonFields.secretKey}
+          onReset={onResetSecretKey}
+          placeholder="Enter Secret"
           width={40}
         />
       </InlineField>

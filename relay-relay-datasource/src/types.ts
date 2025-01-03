@@ -23,8 +23,6 @@ export interface DataSourceResponse {
  */
 export interface MyDataSourceOptions extends DataSourceJsonData {
   path?: string;
-  username: string;
-  password: string;
 }
 
 /**
@@ -32,4 +30,5 @@ export interface MyDataSourceOptions extends DataSourceJsonData {
  */
 export interface MySecureJsonData {
   apiKey?: string;
+  secretKey?: string;
 }
