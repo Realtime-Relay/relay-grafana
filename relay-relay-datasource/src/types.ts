@@ -6,7 +6,7 @@ export interface QueryInput extends DataQuery {
 }
 
 export const DEFAULT_QUERY: Partial<QueryInput> = {
-  topic: "test-topic",
+  topic: "",
 };
 
 export interface DataPoint {

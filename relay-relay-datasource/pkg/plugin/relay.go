@@ -21,12 +21,6 @@ type Client interface {
 	Dispose()
 }
 
-// type Options struct {
-// 	URI           string `json:"url"`
-// 	Username      string `json:"username"`
-// 	Password      string `json:"password"`
-// }
-
 type TopicMap struct {
 	sync.Map
 }
@@ -48,7 +42,9 @@ func InitNewClient(o *Datasource) (*nats.Conn, string, error){
 	var creds = getCreds(o.ApiKey, o.SecretKey)
 	log.DefaultLogger.Info(creds)
 
-	var natsClient, err = nats.Connect("nats://host.docker.internal:4222", nats.UserCredentials(creds))
+	var endpoint = fmt.Sprintf("nats://%s:4222", o.Path);
+
+	var natsClient, err = nats.Connect(endpoint, nats.UserCredentials(creds))
 
 	if err != nil{
 		log.DefaultLogger.Info("Unable to connected to Relay: ", err)

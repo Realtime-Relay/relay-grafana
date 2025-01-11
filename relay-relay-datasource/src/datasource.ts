@@ -14,8 +14,6 @@ export class DataSource extends DataSourceWithBackend<QueryInput, MyDataSourceOp
   }
 
   applyTemplateVariables(query: QueryInput, scopedVars: ScopedVars) {
-    console.log("APPLY", query)
-    console.log("APPLY", scopedVars)
     return {
       ...query,
       queryText: getTemplateSrv().replace(query.topic, scopedVars),
@@ -29,13 +27,12 @@ export class DataSource extends DataSourceWithBackend<QueryInput, MyDataSourceOp
 
   query(request: DataQueryRequest<QueryInput>): Observable<DataQueryResponse> {
     const observables = request.targets.map((query, index) => {
-      console.log(`Query => ${query}`)
 
       return getGrafanaLiveSrv().getDataStream({
         addr: {
           scope: LiveChannelScope.DataSource,
           namespace: this.uid,
-          path: this.uid,
+          path: "path/" + query.topic,
           data: {
             ...query,
           },

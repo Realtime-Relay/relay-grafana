@@ -30,9 +30,11 @@ var (
 
 // NewDatasource creates a new datasource instance.
 func NewDatasource(s backend.DataSourceInstanceSettings) (instancemgmt.Instance, error) {
+	log.DefaultLogger.Error("NewDatasource()")
+
 	settings, secureSettings, err := getDatasourceSettings(s)
 	if err != nil {
-		return nil, err
+		return nil, err 
 	}
 
 	return &Datasource{
@@ -94,6 +96,7 @@ type Datasource struct {
 // be disposed and a new one will be created using NewSampleDatasource factory function.
 func (d *Datasource) Dispose() {
 	// Clean up datasource instance resources.
+	log.DefaultLogger.Error("DIPOSE()")
 }
 
 // CheckHealth handles health checks sent from Grafana to the plugin.
@@ -127,8 +130,6 @@ func (d *Datasource) canConnect() bool {
 // SubscribeStream just returns an ok in this case, since we will always allow the user to successfully connect.
 // Permissions verifications could be done here. Check backend.StreamHandler docs for more details.
 func (d *Datasource) SubscribeStream(_ context.Context, req *backend.SubscribeStreamRequest) (*backend.SubscribeStreamResponse, error) {
-	logObject("RELAY_STREAM_SUB", req)
-
 	return &backend.SubscribeStreamResponse{
 		Status: backend.SubscribeStreamStatusOK,
 	}, nil
