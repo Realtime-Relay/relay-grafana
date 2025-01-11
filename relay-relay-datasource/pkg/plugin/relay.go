@@ -43,6 +43,7 @@ func InitNewClient(o *Datasource) (*nats.Conn, string, error){
 	log.DefaultLogger.Info(creds)
 
 	var endpoint = fmt.Sprintf("nats://%s:4222", o.Path);
+	log.DefaultLogger.Info(endpoint)
 
 	var natsClient, err = nats.Connect(endpoint, nats.UserCredentials(creds))
 

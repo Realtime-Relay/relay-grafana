@@ -1,5 +1,5 @@
 import { DataSourceInstanceSettings, CoreApp, ScopedVars, DataQueryRequest, DataQueryResponse, LiveChannelScope } from '@grafana/data';
-import { DataSourceWithBackend, getGrafanaLiveSrv, getTemplateSrv } from '@grafana/runtime';
+import { DataSourceWithBackend, getGrafanaLiveSrv, getTemplateSrv, logInfo } from '@grafana/runtime';
 import { Observable, merge } from 'rxjs';
 
 import { QueryInput, MyDataSourceOptions, DEFAULT_QUERY } from './types';
@@ -28,13 +28,17 @@ export class DataSource extends DataSourceWithBackend<QueryInput, MyDataSourceOp
   query(request: DataQueryRequest<QueryInput>): Observable<DataQueryResponse> {
     const observables = request.targets.map((query, index) => {
 
+      // To apply scoped vars
+      const finalQuery = this.applyTemplateVariables(query, request.scopedVars);
+
       return getGrafanaLiveSrv().getDataStream({
         addr: {
           scope: LiveChannelScope.DataSource,
           namespace: this.uid,
-          path: "path/" + query.topic,
+          path: "path/" + finalQuery.queryText,
           data: {
-            ...query,
+            ...finalQuery,
+            topic: finalQuery.queryText
           },
         },
       });

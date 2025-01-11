@@ -6,6 +6,7 @@
   "metrics": true,
   "backend": true,
   "streaming": true,
+  "alerting": true,
   "executable": "gpx_relay",
   "info": {
     "description": "A datasource plugin that displays realtime information from the Relay Network",

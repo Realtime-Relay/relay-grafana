@@ -172,6 +172,7 @@ func (d *Datasource) RunStream(ctx context.Context, req *backend.RunStreamReques
 	})
 
 	logObject("RELAY_DEBUG_JS_ERR", sErr)
+	logObject("RELAY_DEBUG_JS_STREAM", newStream)
 
 	consumer, _ := js.CreateOrUpdateConsumer(ctx, streamName, jetstream.ConsumerConfig{
 		Name: topic,

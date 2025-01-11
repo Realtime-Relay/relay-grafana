@@ -8,6 +8,7 @@ type Props = QueryEditorProps<DataSource, QueryInput, MyDataSourceOptions>;
 
 export function QueryEditor({ query, onChange, onRunQuery }: Props) {
   const onTopicChange = (event: ChangeEvent<HTMLInputElement>) => {
+    console.log("ONCHANGE")
     onChange({ ...query, topic: event.target.value });
   };
 
