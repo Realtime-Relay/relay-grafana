@@ -57,8 +57,6 @@ func getDatasourceSettings(s backend.DataSourceInstanceSettings) (*Options, *Dec
 	settings := &Options{}
 	secureSettings := &DecryptedSecureJSONData{}
 
-	logObject("CUSTOM_DEBUG", s)
-
 	if err := json.Unmarshal(s.JSONData, settings); err != nil {
 		logObject("CUSTOM_DEBUG", err)
 		return nil, nil, err
@@ -76,9 +74,6 @@ func getDatasourceSettings(s backend.DataSourceInstanceSettings) (*Options, *Dec
 		logObject("CUSTOM_DEBUG", err)
 		return nil, nil, err
 	}
-
-	logObject("CUSTOM_DEBUG", settings)
-	logObject("CUSTOM_DEBUG", secureSettings)
 
 	return settings, secureSettings, nil
 }
@@ -105,7 +100,7 @@ func (d *Datasource) Dispose() {
 // a datasource is working as expected.
 func (d *Datasource) CheckHealth(_ context.Context, req *backend.CheckHealthRequest) (*backend.CheckHealthResult, error) {
 	var status = backend.HealthStatusOk
-	var message = "Connection can be successfully established"
+	var message = "Connection successfully established"
 
 	if !d.canConnect() {
 		status = backend.HealthStatusError
@@ -158,8 +153,6 @@ func (d *Datasource) RunStream(ctx context.Context, req *backend.RunStreamReques
 	
 	js, _ := jetstream.New(natsClient)
 
-	logObject("RELAY_DEBUG_NC", natsClient)
-
 	log.DefaultLogger.Info("Connected to Relay!")
 	logObject("RELAY_DEBUG_REQ", req.Data)
 
@@ -178,7 +171,6 @@ func (d *Datasource) RunStream(ctx context.Context, req *backend.RunStreamReques
 		Subjects: []string{topic},
 	})
 
-	logObject("RELAY_DEBUG_JS", newStream)
 	logObject("RELAY_DEBUG_JS_ERR", sErr)
 
 	consumer, _ := js.CreateOrUpdateConsumer(ctx, streamName, jetstream.ConsumerConfig{
@@ -219,12 +211,10 @@ func (d *Datasource) RunStream(ctx context.Context, req *backend.RunStreamReques
 					rawMsg, _ := json.Marshal(messageMap)
 			
 					var message json.RawMessage = rawMsg
-					start := jsonMap["start"].(float64)
 			
 					err := sender.SendFrame(
 						data.NewFrame(
 							"response",
-							data.NewField("time", nil, []float64{start}),
 							data.NewField("value", nil, []json.RawMessage{message}),
 						),
 						data.IncludeAll,

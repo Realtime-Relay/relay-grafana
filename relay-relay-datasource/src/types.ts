@@ -10,7 +10,6 @@ export const DEFAULT_QUERY: Partial<QueryInput> = {
 };
 
 export interface DataPoint {
-  Time: object;
   Value: object;
 }
 
