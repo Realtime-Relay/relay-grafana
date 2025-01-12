@@ -13,7 +13,7 @@
     "author": {
       "name": "Relay"
     },
-    "keywords": ["datasource"],
+    "keywords": ["realtime", "realtime-telemetry", "realtime-visualization"],
     "logos": {
       "small": "img/logo.svg",
       "large": "img/logo.svg"
