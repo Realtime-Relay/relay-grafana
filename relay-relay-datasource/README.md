@@ -22,6 +22,25 @@ Minimum supported Grafana version => 10.4.0
 ![Datasource Setup](docs/ds_setup.png "Datasource Setup")
 
 ## Example
-Paint a scenario of that you are visualizing<br>
-Setup dashboard and link topics and the time setting on the top right<br>
-Run the script and show realtime data being populated on the graphs
+To demonstrate the how the data source works, a [script](https://github.com/Realtime-Relay/relayx-js/blob/main/examples/example_send_data_on_connect.js) will publish to a topic called "power-telemetry". The data source listens to "power-telemetry" and displays it on a time series graph.<br>
+
+The script generates random values between 0 and 100, sends it to the Relay Network and relays it to the datasource on grafana.
+
+### Dashboard Setup
+1. Create a Time Series Panel
+   * Add a new time series graph to your Grafana dashboard.
+   * Select the Relay Data Source as the data source for the panel.
+2. Set the Query Topic
+   * In the query editor, specify the topic as "power-telemetry". This will fetch data streamed to that topic.
+3. Define the Time Range
+   * Configure the time range to now-6s to now for a scrolling, real-time graph. While this is an example range, keep it within 10s.
+4. Transform the Data
+   * Apply necessary transformations to structure the incoming data from the topic according to the visualization requirements of your panel.
+5. Start Streaming
+   * Hit the Refresh button. As long as data is being sent to the "power-telemetry" topic, it will populate the graph in real time.
+<br>
+
+![Graph Setup](docs/graph_setup.png "Graph Setup")
+
+### Demo
+![Demo](docs/demo_gif.gif "Demo")
