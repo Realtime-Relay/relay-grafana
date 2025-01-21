@@ -2,7 +2,7 @@
   "$schema": "https://raw.githubusercontent.com/grafana/grafana/main/docs/sources/developers/plugins/plugin.schema.json",
   "type": "datasource",
   "name": "Relay",
-  "id": "relay-relay-datasource",
+  "id": "arjunpreetham49-relay-datasource",
   "metrics": true,
   "backend": true,
   "streaming": true,
