@@ -39,13 +39,10 @@ type NamespaceData struct {
 }
 
 func InitNewClient(o *Datasource) (*nats.Conn, string, error){
-	var creds = getCreds(o.ApiKey, o.SecretKey)
-	log.DefaultLogger.Info(creds)
-
 	var endpoint = fmt.Sprintf("nats://%s:4222", o.Path);
 	log.DefaultLogger.Info(endpoint)
 
-	var natsClient, err = nats.Connect(endpoint, nats.UserCredentials(creds))
+	var natsClient, err = nats.Connect(endpoint, nats.UserJWTAndSeed(o.ApiKey, o.SecretKey))
 
 	if err != nil{
 		log.DefaultLogger.Info("Unable to connected to Relay: ", err)
@@ -76,46 +73,4 @@ func InitNewClient(o *Datasource) (*nats.Conn, string, error){
 	log.DefaultLogger.Info(namespace.Data.Namespace)
 
 	return natsClient, namespace.Data.Namespace, nil
-}
-
-func getCreds(jwt string, secret string) string{
-	var creds = fmt.Sprintf(`
------BEGIN NATS USER JWT-----
-%s
-------END NATS USER JWT------
-
-************************* IMPORTANT *************************
-NKEY Seed printed below can be used to sign and prove identity.
-NKEYs are sensitive and should be treated as secrets.
-
------BEGIN USER NKEY SEED-----
-%s
-------END USER NKEY SEED------
-
-*************************************************************
-	`, jwt, secret)
-
-	file, err := os.Create("user.creds")
-	if err != nil {
-		fmt.Println("Error creating file:", err)
-		return ""
-	}
-	defer file.Close() // Ensure the file is closed when the function ends
-
-	// Write some data to the file
-	_, err = file.WriteString(creds)
-	if err != nil {
-		fmt.Println("Error writing to file:", err)
-		return ""
-	}
-
-	fmt.Println("File created successfully: user.creds")
-
-	absPath, err := filepath.Abs("user.creds")
-	if err != nil {
-		fmt.Println("Error getting absolute path:", err)
-		return ""
-	}
-
-	return absPath
 }
