@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"sync"
 	"time"
-	"os"
-	"path/filepath"
 
 	nats "github.com/nats-io/nats.go"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
