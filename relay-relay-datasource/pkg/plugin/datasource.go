@@ -140,6 +140,8 @@ func (d *Datasource) PublishStream(context.Context, *backend.PublishStreamReques
 
 type ReqData struct {
 	Topic string `json:"topic"`
+	StartTime string `json:"start_time"`
+	Path int64 `json:"path"`
 }
 
 func (d *Datasource) RunStream(ctx context.Context, req *backend.RunStreamRequest, sender *backend.StreamSender) error {
@@ -154,14 +156,16 @@ func (d *Datasource) RunStream(ctx context.Context, req *backend.RunStreamReques
 	js, _ := jetstream.New(natsClient)
 
 	log.DefaultLogger.Info("Connected to Relay!")
-	logObject("RELAY_DEBUG_REQ", req.Data)
+	logObject("RELAY_DEBUG_REQ", req)
 
 	reqData := ReqData{}
 
 	if err := json.Unmarshal([]byte(req.Data), &reqData); err != nil {
-		logObject("RELAY_DEBUG_JSON_ERR", err)
+		logObject("RELAY_DEBUG_JSON_ERR", reqData)
 		return err
 	}
+
+	logObject("RELAY_DEBUG_REQ_DATA", reqData)
 
 	var streamName = fmt.Sprintf("%s_stream", namespace)
 	var topic = fmt.Sprintf("%s_%s", streamName, reqData.Topic)
@@ -174,31 +178,52 @@ func (d *Datasource) RunStream(ctx context.Context, req *backend.RunStreamReques
 	logObject("RELAY_DEBUG_JS_ERR", sErr)
 	logObject("RELAY_DEBUG_JS_STREAM", newStream)
 
-	consumer, _ := js.CreateOrUpdateConsumer(ctx, streamName, jetstream.ConsumerConfig{
-		Name: topic,
+	log.DefaultLogger.Info("TIMESTAMP:", reqData.StartTime)
+
+	parsedTime, err := time.Parse(time.RFC3339, reqData.StartTime)
+	if err != nil {
+		log.DefaultLogger.Info("TIMESTAMP ERR:", err)
+		return err
+	}
+
+	log.DefaultLogger.Info("CONSUMER NAME", reqData.Path)
+
+	consumer, err := js.CreateOrUpdateConsumer(ctx, streamName, jetstream.ConsumerConfig{
+		Name: fmt.Sprintf("%s", reqData.Path), // Create unique consumer for particular consumer
 		FilterSubject: topic,
-		DeliverPolicy: jetstream.DeliverNewPolicy,
+		DeliverPolicy: jetstream.DeliverByStartTimePolicy,
 		AckPolicy: jetstream.AckExplicitPolicy,
 		ReplayPolicy: jetstream.ReplayInstantPolicy,
+		OptStartTime: &parsedTime,
 	})
 
+	if err != nil {
+		log.DefaultLogger.Info("CONSUMER ERR", err)
+	}
+
 	var ticker = time.NewTicker(100)
+
+	log.DefaultLogger.Info("TICKER INIT")
 
 	for {
 		select {
 			case <-ctx.Done():
+				log.DefaultLogger.Info("CONTEXT DONE")
 				return ctx.Err()
 			case <-ticker.C:
+				log.DefaultLogger.Info("TICKET START")
 				iter, err := consumer.Messages(jetstream.PullMaxMessages(1))
+				log.DefaultLogger.Info("MESSAGES ERR", err)
 
 				if err != nil {
-					Logger.Error("Error retrieving message pull")
+					log.DefaultLogger.Info("Error retrieving message pull")
 					continue
 				}
 
 				msg, err := iter.Next()
+				log.DefaultLogger.Info("ITER ERR", err)
 				if err != nil {
-					Logger.Error("Error retrieving message")
+					log.DefaultLogger.Info("Error retrieving message")
 					continue
 				}else{
 					msg.Ack()

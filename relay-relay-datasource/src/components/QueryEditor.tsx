@@ -8,15 +8,18 @@ type Props = QueryEditorProps<DataSource, QueryInput, MyDataSourceOptions>;
 
 export function QueryEditor({ query, onChange, onRunQuery }: Props) {
   const onTopicChange = (event: ChangeEvent<HTMLInputElement>) => {
-    console.log("ONCHANGE")
     onChange({ ...query, topic: event.target.value });
+  };
+
+  const onStartTimeChange = (event: ChangeEvent<HTMLInputElement>) => {
+    onChange({ ...query, start_time: event.target.value });
   };
 
   return (
     <Stack gap={0}>
       <InlineField label="Topic" labelWidth={16} tooltip="Enter topic to listen from">
         <Input
-          id="query-editor-query-text"
+          id="query-topic"
           onChange={onTopicChange}
           value={query.topic || ''}
           onBlur={onRunQuery}

@@ -1,6 +1,7 @@
 import { DataSourceInstanceSettings, CoreApp, ScopedVars, DataQueryRequest, DataQueryResponse, LiveChannelScope } from '@grafana/data';
 import { DataSourceWithBackend, getGrafanaLiveSrv, getTemplateSrv, logInfo } from '@grafana/runtime';
 import { Observable, merge } from 'rxjs';
+// import { crypto } from 'crypto';
 
 import { QueryInput, MyDataSourceOptions, DEFAULT_QUERY } from './types';
 
@@ -14,15 +15,28 @@ export class DataSource extends DataSourceWithBackend<QueryInput, MyDataSourceOp
   }
 
   applyTemplateVariables(query: QueryInput, scopedVars: ScopedVars) {
+    var start = getTemplateSrv().replace("${__from:date:iso}", scopedVars)
+    var topic = getTemplateSrv().replace(query.topic, scopedVars)
+
+    const date = new Date(start);
+
+    // Convert to Unix timestamp (in seconds)
+    const unixTimestamp = Math.floor(date.getTime() / 1000);
+
+    // Adding time to create unique path
+    var pathData = unixTimestamp
+
     return {
       ...query,
-      queryText: getTemplateSrv().replace(query.topic, scopedVars),
+      topic: topic,
+      start_time: start,
+      path: pathData
     };
   }
 
   filterQuery(query: QueryInput): boolean {
     // if no query has been provided, prevent the query from being executed
-    return !!query.topic;
+    return true;
   }
 
   query(request: DataQueryRequest<QueryInput>): Observable<DataQueryResponse> {
@@ -35,10 +49,9 @@ export class DataSource extends DataSourceWithBackend<QueryInput, MyDataSourceOp
         addr: {
           scope: LiveChannelScope.DataSource,
           namespace: this.uid,
-          path: "path/" + finalQuery.queryText,
+          path: finalQuery.path,
           data: {
             ...finalQuery,
-            topic: finalQuery.queryText
           },
         },
       });

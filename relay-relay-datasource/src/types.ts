@@ -3,10 +3,12 @@ import { DataQuery } from '@grafana/schema';
 
 export interface QueryInput extends DataQuery {
   topic?: string
+  start_time?: string
 }
 
 export const DEFAULT_QUERY: Partial<QueryInput> = {
   topic: "",
+  start_time: "${__from:date:iso}"
 };
 
 export interface DataPoint {
