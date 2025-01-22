@@ -13,7 +13,7 @@ rm dist/README.md
 cp README.md dist/README.md
 
 echo "Creating release..."
-mkdir releases/arjunpreetham49-relay-datasource 
+mkdir releases/arjunpreetham49-relay-datasource
 mv dist/* releases/arjunpreetham49-relay-datasource
 
 echo "Moving GO files..."
@@ -23,12 +23,12 @@ cp -r pkg releases/arjunpreetham49-relay-datasource
 
 echo "Ziping up plugin..."
 cd releases/
-zip arjunpreetham49-relay-datasource.zip . -r --exclude .DS_Store
+zip arjunpreetham49-relay-datasource-$PLUGIN_VERSION.zip . -r --exclude .DS_Store
 rm -r arjunpreetham49-relay-datasource
-zipinfo arjunpreetham49-relay-datasource.zip
+zipinfo arjunpreetham49-relay-datasource-$PLUGIN_VERSION.zip
 cd ../ 
 rm -r dist
-MD5_HASH=$(md5 releases/arjunpreetham49-relay-datasource.zip)
+MD5_HASH=$(md5 releases/arjunpreetham49-relay-datasource-$PLUGIN_VERSION.zip)
 echo "Done"
 
 echo "MD5 Hash => $MD5_HASH"
