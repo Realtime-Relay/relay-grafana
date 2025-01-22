@@ -16,13 +16,6 @@ echo "Creating release..."
 mkdir releases/arjunpreetham49-relay-datasource
 mv dist/* releases/arjunpreetham49-relay-datasource
 
-echo "Moving GO files..."
-cp -r pkg releases/arjunpreetham49-relay-datasource
-cp go.mod go.sum Magefile.go releases/arjunpreetham49-relay-datasource
-
-# echo "Moving frontend files..."
-# cp -r src releases/arjunpreetham49-relay-datasource
-
 echo "Ziping up plugin..."
 cd releases/
 zip arjunpreetham49-relay-datasource-$PLUGIN_VERSION.zip . -r --exclude .DS_Store
