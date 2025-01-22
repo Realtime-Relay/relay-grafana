@@ -1,0 +1,48 @@
+{
+    "$schema": "https://raw.githubusercontent.com/grafana/grafana/main/docs/sources/developers/plugins/plugin.schema.json",
+    "type": "datasource",
+    "name": "Relay",
+    "id": "arjunpreetham49-relay-datasource",
+    "metrics": true,
+    "backend": true,
+    "streaming": true,
+    "alerting": true,
+    "executable": "gpx_relay",
+    "info": {
+        "description": "A datasource plugin that displays realtime information from the Relay Network",
+        "author": {
+            "name": "Relay"
+        },
+        "keywords": [
+            "realtime",
+            "realtime-telemetry",
+            "realtime-visualization"
+        ],
+        "logos": {
+            "small": "img/logo.png",
+            "large": "img/logo.png"
+        },
+        "links": [],
+        "screenshots": [
+            {
+                "name": "Demo",
+                "path": "img/demo_gif.gif"
+            },
+            {
+                "name": "Connection Setup",
+                "path": "img/ds_setup.png"
+            },
+            {
+                "name": "Graph Setup",
+                "path": "img/graph_setup.png"
+            }
+        ],
+        "version": "1.0.0",
+        "updated": "2025-01-22"
+    },
+    "dependencies": {
+        "grafanaDependency": ">=10.4.0",
+        "plugins": []
+    },
+    "buildMode": "production"
+}
