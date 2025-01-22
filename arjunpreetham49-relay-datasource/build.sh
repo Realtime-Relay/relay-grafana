@@ -6,6 +6,7 @@ echo "Plugin Version => $PLUGIN_VERSION"
 
 echo "Creating plugin binaries..."
 webpack -c ./.config/webpack/webpack.config.ts --env production 
+mage 
 
 echo "Updating README..."
 rm dist/README.md
@@ -17,11 +18,10 @@ mv dist/* releases/arjunpreetham49-relay-datasource
 
 echo "Moving GO files..."
 cp -r pkg releases/arjunpreetham49-relay-datasource
+cp go.mod go.sum Magefile.go releases/arjunpreetham49-relay-datasource
 
 # echo "Moving frontend files..."
 # cp -r src releases/arjunpreetham49-relay-datasource
-
-mage 
 
 echo "Ziping up plugin..."
 cd releases/
