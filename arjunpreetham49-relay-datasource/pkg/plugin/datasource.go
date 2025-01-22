@@ -29,7 +29,7 @@ var (
 )
 
 // NewDatasource creates a new datasource instance.
-func NewDatasource(s backend.DataSourceInstanceSettings) (instancemgmt.Instance, error) {
+func NewDatasource(ctx context.Context, s backend.DataSourceInstanceSettings) (instancemgmt.Instance, error) {
 	log.DefaultLogger.Error("NewDatasource()")
 
 	settings, secureSettings, err := getDatasourceSettings(s)

@@ -6,7 +6,7 @@ echo "Plugin Version => $PLUGIN_VERSION"
 
 echo "Creating plugin binaries..."
 webpack -c ./.config/webpack/webpack.config.ts --env production 
-mage 
+mage -v
 
 echo "Updating README..."
 rm dist/README.md
