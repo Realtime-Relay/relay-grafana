@@ -2,9 +2,8 @@
   "name": "relay",
   "version": "1.0.0",
   "scripts": {
-    "build": "webpack -c ./.config/webpack/webpack.config.ts --env production && mage && rm dist/README.md && cp README.md dist/README.md",
+    "build": "./build.sh",
     "dev": "webpack -w -c ./.config/webpack/webpack.config.ts --env development && GOOS=linux GOARCH=arm64 go build -o dist/gpx_relay_linux_arm64 ./pkg && echo done",
-    "package": "mkdir releases/arjunpreetham49-relay-datasource && mv dist/* releases/arjunpreetham49-relay-datasource && cd releases/ && zip arjunpreetham49-relay-datasource.zip . -r --exclude .DS_Store && rm -r arjunpreetham49-relay-datasource && zipinfo arjunpreetham49-relay-datasource.zip && cd ../ && rm -r dist && md5 releases/arjunpreetham49-relay-datasource.zip",
     "build-release": "GOOS=linux GOARCH=arm64 go build -o dist/relay_plugin ./pkg",
     "test": "jest --watch --onlyChanged",
     "test:ci": "jest --passWithNoTests --maxWorkers 4",

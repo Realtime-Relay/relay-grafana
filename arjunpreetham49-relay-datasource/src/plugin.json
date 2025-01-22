@@ -19,7 +19,20 @@
       "large": "img/logo.png"
     },
     "links": [],
-    "screenshots": [],
+    "screenshots": [
+      {
+        "name": "Demo",
+        "path": "img/demo_gif.gif"
+      },
+      {
+        "name": "Connection Setup",
+        "path": "img/ds_setup.png"
+      },
+      {
+        "name": "Graph Setup",
+        "path": "img/graph_setup.png"
+      }
+    ],
     "version": "%VERSION%",
     "updated": "%TODAY%"
   },
