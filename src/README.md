@@ -19,7 +19,7 @@ Minimum supported Grafana version => 10.4.0
 2. Enter the API Key & Secret into their respective fields.
 3. In the 'Path' field, enter `api.relay-x.io`
 4. Click on the `Save & Test` button and expect a `Connection successfully established` message in green. If you get this, the data source is now setup.
-![Datasource Setup](docs/ds_setup.png "Datasource Setup")
+![Datasource Setup](https://github.com/Realtime-Relay/relay-grafana/releases/download/v0.0.1/ds_setup.png "Datasource Setup")
 
 ## Example
 To demonstrate the how the data source works, a [script](https://github.com/Realtime-Relay/relayx-js/blob/main/examples/example_send_data_on_connect.js) will publish to a topic called "power-telemetry". The data source listens to "power-telemetry" and displays it on a time series graph.<br>
@@ -40,7 +40,7 @@ The script generates random values between 0 and 100, sends it to the Relay Netw
    * Hit the Refresh button. As long as data is being sent to the "power-telemetry" topic, it will populate the graph in real time.
 <br>
 
-![Graph Setup](docs/graph_setup.png "Graph Setup")
+![Graph Setup](https://github.com/Realtime-Relay/relay-grafana/releases/download/v0.0.1/graph_setup.png "Graph Setup")
 
 ### Demo
-![Demo](docs/demo_gif.gif "Demo")
+![Demo](https://github.com/Realtime-Relay/relay-grafana/releases/download/v0.0.1/demo_gif.gif "Demo")

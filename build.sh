@@ -27,7 +27,3 @@ MD5_HASH=$(md5 releases/arjunpreetham49-relay-datasource-$PLUGIN_VERSION.zip)
 echo "Done"
 
 echo "MD5 Hash => $MD5_HASH"
-
-git add .
-git commit -m "Review fixes"
-git push origin main
