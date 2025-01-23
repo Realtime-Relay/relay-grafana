@@ -1,0 +1,39 @@
+services:
+  grafana:
+    user: root
+    container_name: 'relay-relay-datasource'
+
+    build:
+      context: ./.config
+      args:
+        grafana_image: ${GRAFANA_IMAGE:-grafana-enterprise}
+        grafana_version: ${GRAFANA_VERSION:-11.3.2}
+        development: ${DEVELOPMENT:-false}
+        anonymous_auth_enabled: ${ANONYMOUS_AUTH_ENABLED:-true}
+    ports:
+      - 4000:3000/tcp
+      - 2345:2345/tcp # delve
+    security_opt:
+      - 'apparmor:unconfined'
+      - 'seccomp:unconfined'
+    cap_add:
+      - SYS_PTRACE
+    volumes:
+      - ./dist:/var/lib/grafana/plugins/relay-relay-datasource
+      - ./provisioning:/etc/grafana/provisioning
+      - .:/root/relay-relay-datasource
+
+    environment:
+      NODE_ENV: development
+      GF_LOG_FILTERS: plugin.relay-relay-datasource:debug
+      GF_LOG_LEVEL: debug
+      GF_DATAPROXY_LOGGING: 1
+      GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS: relay-relay-datasource
+    networks:
+      - external_network
+    extra_hosts:
+      - "host.docker.internal:host-gateway" # Enables access to the host system for Linux Docker
+
+networks:
+  external_network:
+    driver: bridge
